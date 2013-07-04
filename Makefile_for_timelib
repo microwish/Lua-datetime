@@ -1,0 +1,43 @@
+CC = gcc
+CFLAGS = -g -O2
+CFLAGS_CLEAN = $(CFLAGS)
+
+CPPFLAGS = -DHAVE_CONFIG_H
+COMMON_FLAGS = $(CPPFLAGS)
+
+all: libtimelib.a
+
+libtimelib.a: timelib.o astro.o dow.o parse_date.o parse_tz.o tm2unixtime.o unixtime2tm.o parse_iso_intervals.o interval.o
+        ar r $@ $^
+
+timelib.o: timelib.c
+        $(CC) -fPIC -I. $(COMMON_FLAGS) $(CFLAGS_CLEAN) -o $@ -c $<
+
+astro.o: astro.c
+        $(CC) -fPIC -I. $(COMMON_FLAGS) $(CFLAGS_CLEAN) -o $@ -c $<
+
+dow.o: dow.c
+        $(CC) -fPIC -I. $(COMMON_FLAGS) $(CFLAGS_CLEAN) -o $@ -c $<
+
+parse_date.o: parse_date.c
+        $(CC) -fPIC -I. $(COMMON_FLAGS) $(CFLAGS_CLEAN) -o $@ -c $<
+
+parse_tz.o: parse_tz.c
+        $(CC) -fPIC -I. $(COMMON_FLAGS) $(CFLAGS_CLEAN) -o $@ -c $<
+
+tm2unixtime.o: tm2unixtime.c
+        $(CC) -fPIC -I. $(COMMON_FLAGS) $(CFLAGS_CLEAN) -o $@ -c $<
+
+unixtime2tm.o: unixtime2tm.c
+        $(CC) -fPIC -I. $(COMMON_FLAGS) $(CFLAGS_CLEAN) -o $@ -c $<
+
+parse_iso_intervals.o: parse_iso_intervals.c
+        $(CC) -fPIC -I. $(COMMON_FLAGS) $(CFLAGS_CLEAN) -o $@ -c $<
+
+interval.o: interval.c
+        $(CC) -fPIC -I. $(COMMON_FLAGS) $(CFLAGS_CLEAN) -o $@ -c $<
+
+clean:
+        rm -rf *.o
+
+.PHONY: all install clean
