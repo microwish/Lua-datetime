@@ -27,7 +27,7 @@
 
 static timelib_tzinfo *get_timezone_info(char *tz_str)
 {
-  timelib_tzinfo *tzip;
+	timelib_tzinfo *tzip;
 
 	tzip = timelib_parse_tzfile(tz_str, &timezonedb_builtin);
 
@@ -72,11 +72,54 @@ static int l_gettimeofday(lua_State *L)
 	lua_pushnumber(L, offset->is_dst);
 	lua_setfield(L, -2, "dsttime");
 
+	timelib_time_offset_dtor(offset);
+
 	return 1;
+}
+
+static int l_microtime(lua_State *L)
+{
+	int return_float = 0;
+
+	switch (lua_gettop(L)) {
+		case 1:
+			return_float = lua_toboolean(L, 1);
+		case 0:
+			break;
+		default:
+			lua_pushboolean(L, 0);
+			lua_pushliteral(L, "argument error");
+			return 2;
+	}
+
+	struct timeval tv = {0};
+
+	if (gettimeofday(&tv, NULL)) {
+		lua_pushboolean(L, 0);
+		lua_pushliteral(L, "Internal error");
+		return 2;
+	}
+
+	if (return_float) {
+		lua_pushnumber(L, (lua_Number)(tv.tv_sec + tv.tv_usec / MICRO_IN_SEC));
+		return 1;
+	} else {
+		char ret[100];
+		int l;
+		l = snprintf(ret, 100, "%.8F %ld", tv.tv_usec / MICRO_IN_SEC, tv.tv_sec);
+		if (l < 0) {
+			lua_pushboolean(L, 0);
+			lua_pushliteral(L, "Internal error");
+			return 2;
+		}
+		lua_pushlstring(L, ret, l);
+		return 1;
+	}
 }
 
 static const luaL_Reg l_funcs[] = {
 	{ "gettimeofday", l_gettimeofday },
+	{ "microtime", l_microtime },
 	{ NULL, NULL }
 };
 
