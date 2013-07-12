@@ -1,5 +1,9 @@
 /**
  * datetime module compatible with PHP's datetime lib
+ *
+ * please use ngx_lua's APIs such as ngx.now and ngx.time as long as they meets your needs
+ * cos they avoid system calls to some extent
+ *
  * @author microwish@gmail.com
  */
 #include <timelib/timelib.h>
@@ -45,14 +49,16 @@ static int l_gettimeofday(lua_State *L)
 			break;
 		default:
 			lua_pushboolean(L, 0);
-			return 1;
+			lua_pushliteral(L, "Bad arguments");
+			return 2;
 	}
 
 	struct timeval tv = {0};
 
 	if (gettimeofday(&tv, NULL)) {
 		lua_pushboolean(L, 0);
-		return 1;
+		lua_pushliteral(L, "Syscall error");
+		return 2;
 	}
 
 	if (return_float) {
@@ -88,7 +94,7 @@ static int l_microtime(lua_State *L)
 			break;
 		default:
 			lua_pushboolean(L, 0);
-			lua_pushliteral(L, "argument error");
+			lua_pushliteral(L, "Arguments error");
 			return 2;
 	}
 
@@ -96,7 +102,7 @@ static int l_microtime(lua_State *L)
 
 	if (gettimeofday(&tv, NULL)) {
 		lua_pushboolean(L, 0);
-		lua_pushliteral(L, "Internal error");
+		lua_pushliteral(L, "Syscall error");
 		return 2;
 	}
 
@@ -104,12 +110,12 @@ static int l_microtime(lua_State *L)
 		lua_pushnumber(L, (lua_Number)(tv.tv_sec + tv.tv_usec / MICRO_IN_SEC));
 		return 1;
 	} else {
-		char ret[100];
+		char ret[100];//adopted from PHP's implementation
 		int l;
 		l = snprintf(ret, 100, "%.8F %ld", tv.tv_usec / MICRO_IN_SEC, tv.tv_sec);
 		if (l < 0) {
 			lua_pushboolean(L, 0);
-			lua_pushliteral(L, "Internal error");
+			lua_pushliteral(L, "libc routine error");
 			return 2;
 		}
 		lua_pushlstring(L, ret, l);
